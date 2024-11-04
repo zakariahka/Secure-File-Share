@@ -8,3 +8,4 @@ def create_app():
     from .blueprints.user import user_routes as user_blueprint
     app.register_blueprint(user_blueprint, url_prefix='/user')
     
+    return app
