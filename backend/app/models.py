@@ -6,7 +6,9 @@ class User(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     email = db.Column(db.String(120), nullable=False, unique=True)
     name = db.Column(db.String(50), nullable=False, unique=False)
+    password = db.Column(db.String(50), nullable=False, unique=False)
 
-    def __repr__(self):
-        return f"<User {self.name}>"
-    
+    def __init__(self, email, name, password):
+        self.email = email
+        self.name = name
+        self.password = password
