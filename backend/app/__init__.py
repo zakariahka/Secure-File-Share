@@ -12,7 +12,7 @@ def create_app():
     with app.app_context():
         from . import models
 
-    from .blueprints.user import user_routes as user_blueprint
-    app.register_blueprint(user_blueprint, url_prefix='/user')
+    from .blueprints.user import user_bp
+    app.register_blueprint(user_bp, url_prefix='/user')
     
     return app
