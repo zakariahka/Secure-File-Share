@@ -83,6 +83,29 @@ def login():
     token = create_jwt_token(email)
     
     response = make_response(jsonify(message="User has successfully logged in"))
-    response.set_cookie("auth_token", token, httponly=True, samesite="Lax")
+    response.set_cookie(
+        'token', 
+        token, 
+        httponly=True, 
+        samesite='Lax', 
+        secure=False,
+        max_age=86400
+    )
 
     return response, 200
+
+@user_bp.route('/me', methods=["GET"])
+def check_auth():
+    token = request.cookies.get("token")
+    print("Received token in /check-auth:", token)
+
+    if not token:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    try:
+        jwt.decode(token, current_app.config["JWT_SECRET"], algorithms=['HS256'])
+        return jsonify({"message": "Authorized"}), 200
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Unauthorized - Token expired"}), 402
+    except jwt.InvalidTokenError:
+        return jsonify({"message": "Unauthorized - Token expired"}), 403
