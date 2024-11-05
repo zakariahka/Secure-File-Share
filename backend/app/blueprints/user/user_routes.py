@@ -7,6 +7,7 @@ from app import db
 import psycopg2 
 from datetime import timedelta, datetime
 import jwt
+from sqlalchemy.exc import IntegrityError
 
 def create_jwt_token(email):
     payload = {
@@ -57,12 +58,11 @@ def signup():
     try:
         db.session.add(user)
         db.session.commit()
-    except psycopg2.IntegrityError:
+    except IntegrityError:
         db.session.rollback()
-        return jsonify({"error": "User already exists"})
-    user = jsonify(user)
+        return jsonify({"error": "User already exists"}), 409
     
-    return jsonify({"messages": "User has successfully signed up", "user": user}), 200
+    return jsonify({"messages": "User has successfully signed up"}), 200
 
 @user_bp.route('/login', methods=['POST'])
 def login():
@@ -83,6 +83,6 @@ def login():
     token = create_jwt_token(email)
     
     response = make_response(jsonify(message="User has successfully logged in"))
-    response.set_cookie("auth_token", token, httponly=False, samesite="Lax")
+    response.set_cookie("auth_token", token, httponly=True, samesite="Lax")
 
     return response, 200
