@@ -1,9 +1,9 @@
 from . import user_bp
-from flask import jsonify, request
+from flask import jsonify, request, make_response, current_app
 from app.models import User
 from email_validator import validate_email, EmailNotValidError
 from werkzeug.security import generate_password_hash, check_password_hash
-from app import db, create_app
+from app import db
 import psycopg2 
 from datetime import timedelta, datetime
 import jwt
@@ -13,16 +13,14 @@ def create_jwt_token(email):
         "email": email,
         "exp": datetime.utcnow() + timedelta(minutes=60) 
     }
-    token = jwt.encode(payload, create_app.config["JWT_SECRET"], algorithm="HS256")
+    token = jwt.encode(payload, current_app.config["JWT_SECRET"], algorithm="HS256")
     return token
-
 
 @user_bp.route('/test', methods=['GET'])
 def test():
     first_user = User.query.first()
-
     if first_user:
-        return jsonify({"message": "Successfully connected to postgres!"}), 200
+        return first_user.to_dict(), 200
 
 @user_bp.route('/signup', methods=['POST'])
 def signup():
@@ -62,6 +60,7 @@ def signup():
     except psycopg2.IntegrityError:
         db.session.rollback()
         return jsonify({"error": "User already exists"})
+    user = jsonify(user)
     
     return jsonify({"messages": "User has successfully signed up", "user": user}), 200
 
@@ -79,5 +78,11 @@ def login():
     if not user:
         return jsonify({"error": "User doesn't exist"}), 401
     elif not check_password_hash(user.password, password):
-        return jsonify({"error", "Password is incorrect"})
+        return jsonify({"error": "Password is incorrect"})
     
+    token = create_jwt_token(email)
+    
+    response = make_response(jsonify(message="User has successfully logged in"))
+    response.set_cookie("auth_token", token, httponly=False, samesite="Lax")
+
+    return response, 200

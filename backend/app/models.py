@@ -12,3 +12,10 @@ class User(db.Model):
         self.email = email
         self.name = name
         self.password = password
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "email": self.email,
+            "name": self.name
+        }
