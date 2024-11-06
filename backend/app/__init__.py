@@ -6,10 +6,11 @@ from flask_migrate import Migrate
 
 db = SQLAlchemy()
 
+
 def create_app():
     app = Flask(__name__)
-    CORS(app, supports_credentials=True, origins="http://localhost:3000")
     app.config.from_object(Config)
+    CORS(app, supports_credentials=True, origins=app.config["CLIENT_URL"])
     db.init_app(app)
     migrate = Migrate(app, db)
 
@@ -17,6 +18,7 @@ def create_app():
         from . import models
 
     from .blueprints.user import user_bp
-    app.register_blueprint(user_bp, url_prefix='/user')
-    
+
+    app.register_blueprint(user_bp, url_prefix="/user")
+
     return app
