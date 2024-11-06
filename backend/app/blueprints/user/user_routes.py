@@ -111,3 +111,9 @@ def check_auth():
         return jsonify({"error": "Unauthorized - Token expired"}), 400
     except jwt.InvalidTokenError:
         return jsonify({"message": "Unauthorized - Token expired"}), 400
+
+@user_bp.route('/logout', methods=["POST"])
+def logout():
+    response = make_response(jsonify({"message": "User successfully logged out"}))
+    response.set_cookie('token', '', max_age=0)
+    return response, 200
