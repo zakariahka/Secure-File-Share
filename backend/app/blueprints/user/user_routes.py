@@ -52,7 +52,7 @@ def signup():
         email_info = validate_email(email, check_deliverability=True)
         email = email_info.normalized
     except EmailNotValidError as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"error": "Invalid email address"}), 400
     
     hashed_password = generate_password_hash(password)
     user = User(email, name, hashed_password)
