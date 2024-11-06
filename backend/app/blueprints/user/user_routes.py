@@ -32,25 +32,27 @@ def signup():
     email = data.get("email")
     name = data.get("name")
     password = data.get("password")
-    confirmed_password = data.get("confirmed_password")
+    confirmedPassword = data.get("confirmedPassword")
 
-    required_fields = ["email", "name", "password", "confirmed_password"]
-    all(data.get(field) for field in required_fields)
+    required_fields = ["email", "name", "password", "confirmedPassword"]
 
     if not all(data.get(field) for field in required_fields):
-        return jsonify({"error": "One or more of the required feilds are missing"}), 401
+        return jsonify({"error": "One or more of the required feilds are missing"}), 400
     
-    if password != confirmed_password:
-        return jsonify({"error": "Passwords don't match"}), 402
+    password = password.strip()
+    confirmedPassword = confirmedPassword.strip()
+    
+    if password != confirmedPassword:
+        return jsonify({"error": "Passwords don't match"}), 400
     
     if len(password) < 8:
-        return jsonify({"error": "Password length is too small"}), 403
+        return jsonify({"error": "Password length is too small"}), 400
     
     try:
         email_info = validate_email(email, check_deliverability=True)
         email = email_info.normalized
     except EmailNotValidError as e:
-        return jsonify({"error": str(e)}), 404
+        return jsonify({"error": str(e)}), 400
     
     hashed_password = generate_password_hash(password)
     user = User(email, name, hashed_password)
@@ -60,9 +62,9 @@ def signup():
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
-        return jsonify({"error": "User already exists"}), 409
+        return jsonify({"error": "User already exists"}), 400
     
-    return jsonify({"messages": "User has successfully signed up"}), 200
+    return jsonify({"messages": "User has successfully signed up", "user": user.to_dict()}), 200
 
 @user_bp.route('/login', methods=['POST'])
 def login():
@@ -76,9 +78,9 @@ def login():
     user = User.query.filter_by(email=email).first()
 
     if not user:
-        return jsonify({"error": "User doesn't exist"}), 401
+        return jsonify({"error": "User doesn't exist"}), 400
     elif not check_password_hash(user.password, password):
-        return jsonify({"error": "Password is incorrect"})
+        return jsonify({"error": "Email or Password is incorrect"}), 401
     
     token = create_jwt_token(email)
     
@@ -100,12 +102,12 @@ def check_auth():
     print("Received token in /check-auth:", token)
 
     if not token:
-        return jsonify({"error": "Unauthorized"}), 401
+        return jsonify({"error": "Unauthorized"}), 400
     
     try:
         jwt.decode(token, current_app.config["JWT_SECRET"], algorithms=['HS256'])
         return jsonify({"message": "Authorized"}), 200
     except jwt.ExpiredSignatureError:
-        return jsonify({"error": "Unauthorized - Token expired"}), 402
+        return jsonify({"error": "Unauthorized - Token expired"}), 400
     except jwt.InvalidTokenError:
-        return jsonify({"message": "Unauthorized - Token expired"}), 403
+        return jsonify({"message": "Unauthorized - Token expired"}), 400
