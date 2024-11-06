@@ -7,12 +7,12 @@ import axios, { AxiosError } from 'axios'
 
 export default function Signup() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmedPassword, setConfirmedPassword] = useState('');
-  const [error, setError] = useState('');
-  const [passwordMatchError, setPasswordMatchError] = useState('');
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmedPassword, setConfirmedPassword] = useState("");
+  const [error, setError] = useState("");
+  const [passwordMatchError, setPasswordMatchError] = useState("");
 
   const handleSignup = async () => {
     if (confirmedPassword && password !== confirmedPassword) {

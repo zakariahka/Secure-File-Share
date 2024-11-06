@@ -3,21 +3,40 @@
 import { useRouter } from 'next/navigation';
 import axiosInstance from '../../utils/axiosInstance';
 import { useState } from 'react';
+import axios from 'axios'
 
 export default function Login() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
+    const trimmedEmail = email.trim()
+    const trimmedPassword = password.trim()
+
+    if(trimmedEmail === "" || trimmedPassword === ""){
+      console.log("email:", trimmedEmail)
+      console.log("paasword", trimmedPassword)
+      setError("Email or password is missing")
+      return
+    }
+
     try {
-      const response = await axiosInstance.post('user/login', { email, password });
+      setError("")
+      const response = await axiosInstance.post('user/login', { email: trimmedEmail, password: trimmedPassword });
       console.log("Login response:", response);  
       router.push('/main');
+    
     } catch (error) {
-      console.error("Login failed:", error);
-      setError("Login failed. Please try again.");
+      if(axios.isAxiosError(error)){
+        console.log(`Login failed: ${error.response?.data?.error}`)
+        setError(`Login failed. ${error.response?.data?.error || "Unexpected error occurred"}`)
+      }
+      else{
+        console.error("Login failed:", error);
+        setError("Login failed. Please try again.");
+      }
     }
   };
 
