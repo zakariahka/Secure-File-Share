@@ -1,9 +1,9 @@
 "use client";
 
-import { useRouter } from 'next/navigation';
-import axiosInstance from '../../utils/axiosInstance';
-import { useState } from 'react';
-import axios from 'axios'
+import { useRouter } from "next/navigation";
+import axiosInstance from "../../utils/axiosInstance";
+import { useState } from "react";
+import axios from "axios";
 
 export default function Login() {
   const router = useRouter();
@@ -12,35 +12,38 @@ export default function Login() {
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
-    const trimmedEmail = email.trim()
-    const trimmedPassword = password.trim()
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
 
-    if(trimmedEmail === "" || trimmedPassword === ""){
-      setError("Email or password is missing")
-      return
+    if (trimmedEmail === "" || trimmedPassword === "") {
+      setError("Email or password is missing");
+      return;
     }
+    setError("");
 
     try {
-      setError("")
-      const response = await axiosInstance.post('user/login', { email: trimmedEmail, password: trimmedPassword });
-      console.log("Login response:", response);  
-      router.push('/main');
-    
+      const response = await axiosInstance.post("user/login", {
+        email: trimmedEmail,
+        password: trimmedPassword,
+      });
+      console.log("Login response:", response);
+      router.push("/main");
     } catch (error) {
-      if(axios.isAxiosError(error)){
-        console.log(`Login failed: ${error.response?.data?.error}`)
-        setError(`Login failed. ${error.response?.data?.error || "Unexpected error occurred"}`)
-      }
-      else{
+      if (axios.isAxiosError(error)) {
+        console.log(`Login failed: ${error.response?.data?.error}`);
+        setError(
+          `Login failed. ${error.response?.data?.error || "Unexpected error occurred"}`,
+        );
+      } else {
         console.error("Login failed:", error);
         setError("Login failed. Please try again.");
       }
     }
   };
 
-  const handleToSignup = () =>{
-    router.push('/signup')
-  }
+  const handleToSignup = () => {
+    router.push("/signup");
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-light-pink-orange">
@@ -67,7 +70,15 @@ export default function Login() {
         >
           Log In
         </button>
-        <p>Don't have an account? <button className="text-blue-500 hover:text-blue-700" onClick={handleToSignup}>Sign up</button></p>
+        <p>
+          Don't have an account?{" "}
+          <button
+            className="text-blue-500 hover:text-blue-700"
+            onClick={handleToSignup}
+          >
+            Sign up
+          </button>
+        </p>
       </div>
     </div>
   );

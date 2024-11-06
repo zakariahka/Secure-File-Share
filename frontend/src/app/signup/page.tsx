@@ -1,9 +1,9 @@
 "use client";
 
-import { useRouter } from 'next/navigation';
-import axiosInstance from '../../utils/axiosInstance';
-import { useState } from 'react';
-import axios, { AxiosError } from 'axios'
+import { useRouter } from "next/navigation";
+import axiosInstance from "../../utils/axiosInstance";
+import { useState } from "react";
+import axios, { AxiosError } from "axios";
 
 export default function Signup() {
   const router = useRouter();
@@ -15,58 +15,73 @@ export default function Signup() {
     email: "",
     name: "",
     password: "",
-    confirmedPassword: ""
-  })
+    confirmedPassword: "",
+  });
   const [error, setError] = useState("");
   const [passwordMatchError, setPasswordMatchError] = useState("");
 
-  const handleChnge = (e: React.ChangeEvent<HTMLInputElement>) =>{
+  const handleChnge = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setUserData((prevData) => ({
       ...prevData,
-      [name]: value
-    }))
-  }
+      [name]: value,
+    }));
+  };
 
   const handleSignup = async () => {
-    setError("")
-    setPasswordMatchError("")
+    setError("");
+    setPasswordMatchError("");
 
-    const { email, name, password, confirmedPassword } = userData;
+    const trimmedEmail = userData["email"].trim();
+    const trimmedName = userData["name"].trim();
+    const trimmedPassword = userData["password"].trim();
+    const trimmedConfirmedPassword = userData["confirmedPassword"].trim();
 
-    if (userData["confirmedPassword"] && userData["password"] !== userData["confirmedPassword"]) {
+    if (
+      trimmedConfirmedPassword &&
+      trimmedPassword !== trimmedConfirmedPassword
+    ) {
       setPasswordMatchError("Passwords don't match.");
       return;
     }
 
     try {
-      const response = await axiosInstance.post('user/signup', { email, name, password, confirmedPassword });
-      console.log("Signup response:", response);  
-      router.push('/login');
+      const response = await axiosInstance.post("user/signup", {
+        email: trimmedEmail,
+        name: trimmedName,
+        password: trimmedPassword,
+        confirmedPassword: trimmedConfirmedPassword,
+      });
+      console.log("Signup response:", response);
+      router.push("/login");
     } catch (error) {
-      if (axios.isAxiosError(error)){
+      if (axios.isAxiosError(error)) {
         console.error("Signup failed:", error.response?.data?.error);
-        setError(`Signup failed. ${error.response?.data?.error || "An unexpected error occured"}`);
-      }else{
+        setError(
+          `Signup failed. ${error.response?.data?.error || "An unexpected error occured"}`,
+        );
+      } else {
         console.error("Signup failed:", error);
         setError("Signup failed. Please try again");
       }
     }
   };
 
-  const handleConfirmedPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleConfirmedPasswordChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     setUserData((prevData) => ({
       ...prevData,
-      'confirmedPassword': e.target.value
+      confirmedPassword: e.target.value,
     }));
     if (userData["password"] === e.target.value) {
-      setPasswordMatchError('');
+      setPasswordMatchError("");
     }
   };
 
   const handleToLogin = () => {
-    router.push('/login')
-  }
+    router.push("/login");
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-light-pink-orange">
@@ -108,8 +123,8 @@ export default function Signup() {
           value={userData["confirmedPassword"]}
           onChange={handleConfirmedPasswordChange}
           className={`border-2 h-10 px-5 rounded-lg text-sm w-full placeholder-gray-500 
-            ${passwordMatchError ? 'border-red-500' : 'border-light-pink-orange'} 
-            focus:outline-none focus:border-${passwordMatchError ? 'red-500' : 'dark-pink-orange'}`}
+            ${passwordMatchError ? "border-red-500" : "border-light-pink-orange"} 
+            focus:outline-none focus:border-${passwordMatchError ? "red-500" : "dark-pink-orange"}`}
         />
         {passwordMatchError && (
           <p className="text-red-500 text-sm mt-1">{passwordMatchError}</p>
@@ -121,7 +136,15 @@ export default function Signup() {
         >
           Signup
         </button>
-        <p>Already have an account? <button className="text-blue-500 hover:text-blue-700" onClick={handleToLogin}>Log In</button></p>
+        <p>
+          Already have an account?{" "}
+          <button
+            className="text-blue-500 hover:text-blue-700"
+            onClick={handleToLogin}
+          >
+            Log In
+          </button>
+        </p>
       </div>
     </div>
   );
