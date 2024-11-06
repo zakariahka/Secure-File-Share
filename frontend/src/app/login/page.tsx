@@ -16,8 +16,6 @@ export default function Login() {
     const trimmedPassword = password.trim()
 
     if(trimmedEmail === "" || trimmedPassword === ""){
-      console.log("email:", trimmedEmail)
-      console.log("paasword", trimmedPassword)
       setError("Email or password is missing")
       return
     }

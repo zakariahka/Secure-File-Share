@@ -11,11 +11,30 @@ export default function Signup() {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmedPassword, setConfirmedPassword] = useState("");
+  const [userData, setUserData] = useState({
+    email: "",
+    name: "",
+    password: "",
+    confirmedPassword: ""
+  })
   const [error, setError] = useState("");
   const [passwordMatchError, setPasswordMatchError] = useState("");
 
+  const handleChnge = (e: React.ChangeEvent<HTMLInputElement>) =>{
+    const { name, value } = e.target;
+    setUserData((prevData) => ({
+      ...prevData,
+      [name]: value
+    }))
+  }
+
   const handleSignup = async () => {
-    if (confirmedPassword && password !== confirmedPassword) {
+    setError("")
+    setPasswordMatchError("")
+
+    const { email, name, password, confirmedPassword } = userData;
+
+    if (userData["confirmedPassword"] && userData["password"] !== userData["confirmedPassword"]) {
       setPasswordMatchError("Passwords don't match.");
       return;
     }
@@ -36,8 +55,11 @@ export default function Signup() {
   };
 
   const handleConfirmedPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setConfirmedPassword(e.target.value);
-    if (password === e.target.value) {
+    setUserData((prevData) => ({
+      ...prevData,
+      'confirmedPassword': e.target.value
+    }));
+    if (userData["password"] === e.target.value) {
       setPasswordMatchError('');
     }
   };
@@ -54,32 +76,36 @@ export default function Signup() {
 
         <input
           type="email"
+          name="email"
           placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={userData["email"]}
+          onChange={handleChnge}
           className="border-2 focus:outline-none focus:border-dark-pink-orange border-light-pink-orange bg-gray-50 h-10 px-5 rounded-lg text-sm w-full placeholder-gray-500"
         />
 
         <input
           type="name"
+          name="name"
           placeholder="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          value={userData["name"]}
+          onChange={handleChnge}
           className="border-2 focus:outline-none focus:border-dark-pink-orange border-light-pink-orange bg-gray-50 h-10 px-5 rounded-lg text-sm w-full placeholder-gray-500"
         />
 
         <input
           type="password"
+          name="password"
           placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          value={userData["password"]}
+          onChange={handleChnge}
           className="border-2 focus:outline-none focus:border-dark-pink-orange border-light-pink-orange bg-gray-50 h-10 px-5 rounded-lg text-sm w-full placeholder-gray-500"
         />
 
         <input
           type="password"
+          name="confirmedPassword"
           placeholder="Confirm Password"
-          value={confirmedPassword}
+          value={userData["confirmedPassword"]}
           onChange={handleConfirmedPasswordChange}
           className={`border-2 h-10 px-5 rounded-lg text-sm w-full placeholder-gray-500 
             ${passwordMatchError ? 'border-red-500' : 'border-light-pink-orange'} 
