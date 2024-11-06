@@ -32,7 +32,6 @@ export default function Signup() {
         console.error("Signup failed:", error);
         setError("Signup failed. Please try again");
       }
-
     }
   };
 
