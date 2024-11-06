@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import axios from '../../utils/axios';
+import axiosInstance from '../../utils/axiosInstance';
 import { useState } from 'react';
+import axios, { AxiosError } from 'axios'
 
 export default function Signup() {
   const router = useRouter();
@@ -20,12 +21,18 @@ export default function Signup() {
     }
 
     try {
-      const response = await axios.post('user/signup', { email, name, password, confirmedPassword });
+      const response = await axiosInstance.post('user/signup', { email, name, password, confirmedPassword });
       console.log("Signup response:", response);  
       router.push('/login');
     } catch (error) {
-      console.error("Signup failed:", error);
-      setError("Signup failed. Please try again.");
+      if (axios.isAxiosError(error)){
+        console.error("Signup failed:", error.response?.data?.error);
+        setError(`Signup failed. ${error.response?.data?.error || "An unexpected error occured"}`);
+      }else{
+        console.error("Signup failed:", error);
+        setError("Signup failed. Please try again");
+      }
+
     }
   };
 

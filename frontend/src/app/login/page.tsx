@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import axios from '../../utils/axios';
+import axiosInstance from '../../utils/axiosInstance';
 import { useState } from 'react';
 
 export default function Login() {
@@ -12,7 +12,7 @@ export default function Login() {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post('user/login', { email, password });
+      const response = await axiosInstance.post('user/login', { email, password });
       console.log("Login response:", response);  
       router.push('/main');
     } catch (error) {
