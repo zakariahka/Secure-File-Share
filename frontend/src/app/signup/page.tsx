@@ -36,10 +36,14 @@ export default function Signup() {
     }
   };
 
+  const handleToLogin = () => {
+    router.push('/login')
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-light-pink-orange">
       <div className="p-14 bg-white rounded-lg shadow-xl space-y-6 max-w-2xl w-full mx-4">
-        <h1 className="text-xl font-bold text-words-pink-orange">Signup</h1>
+        <h1 className="text-xl font-bold text-words-pink-orange">Sign up</h1>
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
         <input
@@ -85,6 +89,7 @@ export default function Signup() {
         >
           Signup
         </button>
+        <p>Already have an account? <button className="text-blue-500 hover:text-blue-700" onClick={handleToLogin}>Log In</button></p>
       </div>
     </div>
   );
