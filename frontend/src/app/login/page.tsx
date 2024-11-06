@@ -21,6 +21,10 @@ export default function Login() {
     }
   };
 
+  const handleToSignup = () =>{
+    router.push('/signup')
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-light-pink-orange">
       <div className="p-14 bg-white rounded-lg shadow-xl space-y-6 max-w-2xl w-full mx-4">
@@ -46,6 +50,7 @@ export default function Login() {
         >
           Log In
         </button>
+        <p>Don't have an account? <button className="text-blue-500 hover:text-blue-700" onClick={handleToSignup}>Sign up</button></p>
       </div>
     </div>
   );
