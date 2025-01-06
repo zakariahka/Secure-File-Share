@@ -3,6 +3,7 @@ from app import create_app, db
 from app.models import User
 import random
 import string
+from werkzeug.security import generate_password_hash 
 
 @pytest.fixture
 def client():
@@ -83,6 +84,27 @@ def test_mismatch_password(client):
     assert response.status_code == 400
     assert response.get_json()["error"] == "One or more of the required feilds are missing"
 
+@pytest.fixture
+def test_user():
+    email = random_email_generator()
+    password = random_word_generator()
+    hashed_password = generate_password_hash(password) 
+    user = User(email=email, name=random_word_generator(), password=hashed_password)
+    
+    db.session.add(user)
+    db.session.commit()
+    
+    return {
+        "email": email,
+        "password": password,
+    }
+
+def test_login(client, test_user):
+    response = client.post('/user/login', json=test_user)
+
+    assert response.status_code == 200
+    assert response.get_json()["message"] == "User has successfully logged in"
+    assert response.get_json()["user"]["email"] == test_user["email"]
 
 @pytest.mark.parametrize("invalid_email", [
     # different types of invalid emails
