@@ -106,6 +106,15 @@ def test_login(client, test_user):
     assert response.get_json()["message"] == "User has successfully logged in"
     assert response.get_json()["user"]["email"] == test_user["email"]
 
+def test_incorrect_email_or_password(client, test_user):
+    field = random.choice(list(test_user.keys()))
+    test_user[field] = random_word_generator()
+
+    response = client.post('/user/login', json=test_user)
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "Email or Password is incorrect"
+
 @pytest.mark.parametrize("invalid_email", [
     # different types of invalid emails
     # TODO: make dynamic parameters
