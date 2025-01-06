@@ -1,16 +1,19 @@
 import pytest
 from app import create_app, db
 from app.models import User
+import random
+import string
 
 @pytest.fixture
 def client():
+    # TODO: rollback changes
     app = create_app()
     with app.app_context():
         db.create_all()
         yield app.test_client()
         db.session.commit()
 
-def test_connection_route(client):
+def test_connection(client):
     """
     Test connecting to the db.
     """
@@ -22,14 +25,25 @@ def test_connection_route(client):
         assert "email" in user_dict
         assert "name" in user_dict 
 
+def random_email_generator():
+    username = ''.join(random.choices(string.ascii_lowercase + string.digits, k=random.randint(5, 10)))
+    domain = ''.join(random.choices(string.ascii_letters, k=random.randint(5,10)))
+
+    top_level_domain = ['.com', '.org', '.gov', '.edu', '.dev']
+    tld = random.choice(top_level_domain)
+
+    return f'{username}@{domain}.{tld}'
+
 @pytest.mark.parametrize("invalid_email", [
-    "invalidemail.com",         # Missing '@'
-    "invalidemail@",            # Missing domain
-    "@domain.com",              # Missing local part
-    "invalid@@domain.com",      # Extra '@'
-    "invalidemail@domain",      # No TLD
-    "invalid email@domain.com", # Whitespace
-    "invalid()email@domain.com" # Special characters without quotes
+    # different types of invalid emails
+    # TODO: make dynamic parameters
+    "invalidemail.com",         
+    "invalidemail@",            
+    "@domain.com",              
+    "invalid@@domain.com",      
+    "invalidemail@domain",      
+    "invalid email@domain.com",
+    "invalid()email@domain.com"
 ])
 def test_invalid_email_signup(client, invalid_email):
     """
@@ -43,3 +57,4 @@ def test_invalid_email_signup(client, invalid_email):
     })
     assert response.status_code == 400
     assert response.get_json()["error"] == "Invalid email address"
+
