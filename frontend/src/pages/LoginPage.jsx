@@ -19,7 +19,7 @@ export default function LoginPage() {
     } catch (error) {
       if (error.response && error.response.data){
         console.log(error.response.data)
-        setError(error.response.data.message);
+        setError(error.response.data.error);
       }
     }
   };

@@ -18,7 +18,7 @@ def create_jwt_token(email):
 def signup():
     data = request.get_json()
     if not data:
-        return jsonify({"message": "Request body must be a JSON"}), 400
+        return jsonify({"error": "Request body must be a JSON"}), 400
 
     email = data.get("email")
     name = data.get("name")
@@ -26,27 +26,24 @@ def signup():
     confirmed_password = data.get("confirmed_password")
 
     required_fields = ["email", "name", "password", "confirmed_password"]
-    
-    if data.get("confirmed_password") is None:
-        return jsonify({"message": "EMAIL"}), 402
 
     if not all(data.get(field) for field in required_fields):
-        return jsonify({"message": "One or more of the required feilds are missing"}), 401
+        return jsonify({"error": "One or more of the required feilds are missing"}), 400
 
     password = password.strip()
     confirmed_password = confirmed_password.strip()
 
     if password != confirmed_password:
-        return jsonify({"message": "Passwords don't match"}), 400
+        return jsonify({"error": "Passwords don't match"}), 400
 
     if len(password) < 8:
-        return jsonify({"message": "Password length is too small"}), 400
+        return jsonify({"error": "Password length is too small"}), 400
 
     try:
         email_info = validate_email(email, check_deliverability=True)
         email = email_info.normalized
     except EmailNotValidError as e:
-        return jsonify({"message": "Invalid email address"}), 400
+        return jsonify({"error": "Invalid email address"}), 400
 
     hashed_password = generate_password_hash(password)
     user = User(email, name, hashed_password)
@@ -72,14 +69,14 @@ def login():
     password = data.get("password")
 
     if not email or not password:
-        return jsonify({"message": "Email or password is missing"}), 400
+        return jsonify({"error": "Email or password is missing"}), 400
 
     user = User.query.filter_by(email=email).first()
 
     if not user:
-        return jsonify({"message": "User doesn't exist"}), 400
+        return jsonify({"error": "User doesn't exist"}), 400
     elif not check_password_hash(user.password, password):
-        return jsonify({"message": "Email or Password is incorrect"}), 401
+        return jsonify({"error": "Email or Password is incorrect"}), 400
 
     token = create_jwt_token(email)
 
@@ -95,7 +92,7 @@ def check_auth():
     token = request.cookies.get("token")
 
     if not token:
-        return jsonify({"message": "Unauthorized"}), 401
+        return jsonify({"error": "Unauthorized"}), 401
 
     try:
         decoded_token = jwt.decode(token, current_app.config["JWT_SECRET"], algorithms=["HS256"])
@@ -109,9 +106,9 @@ def check_auth():
         
         return jsonify({"message": "Authorized", "user": user}), 200
     except jwt.ExpiredSignatureError:
-        return jsonify({"message": "Unauthorized - Token expired"}), 401
+        return jsonify({"error": "Unauthorized - Token expired"}), 401
     except jwt.InvalidTokenError:
-        return jsonify({"message": "Unauthorized - Token expired"}), 401
+        return jsonify({"error": "Unauthorized - Token expired"}), 401
 
 @user_bp.route("/logout", methods=["POST"])
 def logout():
