@@ -14,6 +14,7 @@ def client():
         yield app.test_client()
         db.session.commit()
 
+
 def test_connection(client):
     """
     Test connecting to the db.
@@ -25,14 +26,17 @@ def test_connection(client):
         assert "id" in user_dict
         assert "email" in user_dict
         assert "name" in user_dict 
+        
 
 def random_word_generator():
     return ''.join(random.choices(string.ascii_letters, k=8))
+
 
 def random_email_generator():
     username = ''.join(random.choices(string.ascii_lowercase, k=random.randint(5, 10)))
     domain = random.choice(['gmail', 'outlook', 'hotmail', 'yahoo', 'icloud', 'aol'])
     return f'{username}@{domain}.com'
+
 
 def test_signup(client):
     password = random_word_generator()
@@ -50,6 +54,7 @@ def test_signup(client):
     assert response.get_json()["message"] == "User has successfully signed up"
     assert response.get_json()["user"]["email"] == user["email"]
 
+
 def test_mismatch_password(client):
     password = random_word_generator()
     confirmed_password = random_word_generator()
@@ -65,6 +70,7 @@ def test_mismatch_password(client):
 
     assert response.status_code == 400
     assert response.get_json()["error"] == "Passwords don't match"
+
 
 def test_mismatch_password(client):
     password = random_word_generator()
@@ -84,6 +90,7 @@ def test_mismatch_password(client):
     assert response.status_code == 400
     assert response.get_json()["error"] == "One or more of the required feilds are missing"
 
+
 @pytest.fixture
 def test_user():
     email = random_email_generator()
@@ -99,12 +106,14 @@ def test_user():
         "password": password,
     }
 
+
 def test_login(client, test_user):
     response = client.post('/user/login', json=test_user)
 
     assert response.status_code == 200
     assert response.get_json()["message"] == "User has successfully logged in"
     assert response.get_json()["user"]["email"] == test_user["email"]
+
 
 def test_incorrect_email_or_password(client, test_user):
     field = random.choice(list(test_user.keys()))
@@ -114,6 +123,17 @@ def test_incorrect_email_or_password(client, test_user):
 
     assert response.status_code == 400
     assert response.get_json()["error"] == "Email or Password is incorrect"
+
+
+def test_missing_email_or_password(client, test_user):
+    field = random.choice(list(test_user.keys()))
+    test_user[field] = None
+
+    response = client.post('/user/login', json=test_user)
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "Email or Password is missing"
+
 
 @pytest.mark.parametrize("invalid_email", [
     # different types of invalid emails
