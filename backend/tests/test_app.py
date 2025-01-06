@@ -65,6 +65,25 @@ def test_mismatch_password(client):
     assert response.status_code == 400
     assert response.get_json()["error"] == "Passwords don't match"
 
+def test_mismatch_password(client):
+    password = random_word_generator()
+
+    user = {
+        "email": random_email_generator(),
+        "name": random_word_generator(),
+        "password": password,
+        "confirmed_password": password
+    }
+
+    random_field = random.choice(list(user.keys()))
+    user[random_field] = None
+
+    response = client.post('user/signup', json=user)
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "One or more of the required feilds are missing"
+
+
 @pytest.mark.parametrize("invalid_email", [
     # different types of invalid emails
     # TODO: make dynamic parameters
