@@ -26,13 +26,29 @@ def test_connection(client):
         assert "name" in user_dict 
 
 def random_email_generator():
-    username = ''.join(random.choices(string.ascii_lowercase + string.digits, k=random.randint(5, 10)))
-    domain = ''.join(random.choices(string.ascii_letters, k=random.randint(5,10)))
+    username = ''.join(random.choices(string.ascii_lowercase, k=random.randint(5, 10)))
+    domain = random.choice(['gmail', 'outlook', 'hotmail', 'yahoo', 'icloud', 'aol'])
+    return f'{username}@{domain}.com'
 
-    top_level_domain = ['.com', '.org', '.gov', '.edu', '.dev']
-    tld = random.choice(top_level_domain)
+def random_word_generator():
+    return ''.join(random.choices(string.ascii_letters, k=8))
 
-    return f'{username}@{domain}.{tld}'
+def test_signup(client):
+    password = random_word_generator()
+
+    user = {
+        "email": random_email_generator(),
+        "name": random_word_generator(),
+        "password": password,
+        "confirmed_password": password
+    }
+
+    response = client.post('/user/signup', json=user)
+
+    assert response.status_code == 200
+    assert response.get_json()["message"] == "User has successfully signed up"
+    assert response.get_json()["user"]["email"] == user["email"]
+    
 
 @pytest.mark.parametrize("invalid_email", [
     # different types of invalid emails
