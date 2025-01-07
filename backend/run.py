@@ -12,4 +12,4 @@ logger = logging.getLogger(__name__)
 logger.info(f"This app is running in {env} environment")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
