@@ -12,4 +12,5 @@ logger = logging.getLogger(__name__)
 logger.info(f"This app is running in {env} environment")
 
 if __name__ == "__main__":
-    app.run()
+    debug_mode = env == "development"
+    app.run(debug=debug_mode)
