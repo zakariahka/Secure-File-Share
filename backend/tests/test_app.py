@@ -15,13 +15,28 @@ def client():
         db.session.remove()
         db.drop_all()
 
+@pytest.fixture
+def test_user():
+    email = random_email_generator()
+    password = random_word_generator()
+    hashed_password = generate_password_hash(password) 
+    user = User(email=email, name=random_word_generator(), password=hashed_password)
+    
+    db.session.add(user)
+    db.session.commit()
+    
+    return {
+        "email": email,
+        "password": password,
+    }
+
 def random_word_generator():
     return ''.join(random.choices(string.ascii_letters, k=8))
 
 
 def random_email_generator():
     username = ''.join(random.choices(string.ascii_lowercase, k=random.randint(5, 10)))
-    domain = random.choice(['gmail', 'outlook', 'hotmail', 'yahoo', 'icloud', 'aol'])
+    domain = random.choice(['gmail', 'outlook', 'icloud', 'hotmail', 'yahoo', 'aol'])
     return f'{username}@{domain}.com'
 
 
@@ -41,6 +56,7 @@ def test_signup(client):
     assert response.get_json()["message"] == "User has successfully signed up"
     assert response.get_json()["user"]["email"] == user["email"]
 
+
 @pytest.mark.parametrize("invalid_email", [
     # different types of invalid emails
     # TODO: make dynamic parameters
@@ -53,9 +69,6 @@ def test_signup(client):
     "invalid()email@domain.com"
 ])
 def test_invalid_email_signup(client, invalid_email):
-    """
-    Test signup with invalid email addresses.
-    """
     response = client.post('/user/signup', json={
         "email": invalid_email,
         "name": "Test User",
@@ -64,6 +77,18 @@ def test_invalid_email_signup(client, invalid_email):
     })
     assert response.status_code == 400
     assert response.get_json()["error"] == "Invalid email address"
+
+
+def test_signup_with_existing_email(client, test_user):
+    response = client.post('/user/signup', json={
+        "email": test_user["email"],
+        "name": "Test User",
+        "password": "password123",
+        "confirmed_password": "password123"
+    })
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "User already exists"
 
 
 def test_signup_mismatch_password(client):
@@ -102,22 +127,6 @@ def test_signup_missing_field(client):
     assert response.get_json()["error"] == "One or more of the required feilds are missing"
 
 
-@pytest.fixture
-def test_user():
-    email = random_email_generator()
-    password = random_word_generator()
-    hashed_password = generate_password_hash(password) 
-    user = User(email=email, name=random_word_generator(), password=hashed_password)
-    
-    db.session.add(user)
-    db.session.commit()
-    
-    return {
-        "email": email,
-        "password": password,
-    }
-
-
 def test_login(client, test_user):
     response = client.post('/user/login', json=test_user)
 
@@ -144,3 +153,4 @@ def test_missing_email_or_password(client, test_user):
 
     assert response.status_code == 400
     assert response.get_json()["error"] == "Email or Password is missing"
+
