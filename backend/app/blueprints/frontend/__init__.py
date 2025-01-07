@@ -32,9 +32,13 @@ def serve_frontend(path):
     if path == 'manifest.json':
         return serve_manifest()
     
-    file_path = os.path.join(BUILD_DIR, path)
+    normalized_path = os.path.normpath(path)
+    file_path = os.path.join(BUILD_DIR, normalized_path)
+
+    if not file_path.startswith(BUILD_DIR):
+        return send_from_directory(BUILD_DIR, 'index.html')
     
     if os.path.exists(file_path):
-        return send_from_directory(BUILD_DIR, path)
+        return send_from_directory(BUILD_DIR, normalized_path)
     else:
         return send_from_directory(BUILD_DIR, 'index.html')
