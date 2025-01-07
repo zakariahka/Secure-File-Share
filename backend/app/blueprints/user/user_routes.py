@@ -42,7 +42,7 @@ def signup():
     try:
         email_info = validate_email(email)
         email = email_info.normalized
-    except EmailNotValidError as e:
+    except EmailNotValidError:
         return jsonify({"error": "Invalid email address"}), 400
 
     hashed_password = generate_password_hash(password)

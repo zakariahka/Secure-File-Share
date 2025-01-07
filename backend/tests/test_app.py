@@ -4,7 +4,7 @@ from app.models import User
 import random
 import string
 from werkzeug.security import generate_password_hash 
-from tests.test_config import TestConfig
+from config import TestConfig
 
 @pytest.fixture
 def client():
@@ -14,6 +14,14 @@ def client():
         yield app.test_client()
         db.session.remove()
         db.drop_all()
+
+def random_word_generator():
+    return ''.join(random.choices(string.ascii_letters, k=8))
+
+def random_email_generator():
+    username = random_word_generator()
+    domain = random.choice(['gmail', 'outlook', 'icloud', 'hotmail', 'yahoo', 'aol'])
+    return f'{username}@{domain}.com'
 
 @pytest.fixture
 def test_user():
@@ -29,15 +37,6 @@ def test_user():
         "email": email,
         "password": password,
     }
-
-def random_word_generator():
-    return ''.join(random.choices(string.ascii_letters, k=8))
-
-
-def random_email_generator():
-    username = ''.join(random.choices(string.ascii_lowercase, k=random.randint(5, 10)))
-    domain = random.choice(['gmail', 'outlook', 'icloud', 'hotmail', 'yahoo', 'aol'])
-    return f'{username}@{domain}.com'
 
 
 def test_signup(client):
@@ -68,7 +67,7 @@ def test_signup(client):
     "invalid email@domain.com",
     "invalid()email@domain.com"
 ])
-def test_invalid_email_signup(client, invalid_email):
+def test_signup_with_invalid_email(client, invalid_email):
     response = client.post('/user/signup', json={
         "email": invalid_email,
         "name": "Test User",
@@ -91,7 +90,7 @@ def test_signup_with_existing_email(client, test_user):
     assert response.get_json()["error"] == "User already exists"
 
 
-def test_signup_mismatch_password(client):
+def test_signup_with_mismatch_password(client):
     password = random_word_generator()
     confirmed_password = random_word_generator()
 
@@ -108,7 +107,7 @@ def test_signup_mismatch_password(client):
     assert response.get_json()["error"] == "Passwords don't match"
 
 
-def test_signup_missing_field(client):
+def test_signup_with_missing_field(client):
     password = random_word_generator()
 
     user = {
@@ -135,7 +134,7 @@ def test_login(client, test_user):
     assert response.get_json()["user"]["email"] == test_user["email"]
 
 
-def test_incorrect_email_or_password(client, test_user):
+def test_login_with_incorrect_email_or_password(client, test_user):
     field = random.choice(list(test_user.keys()))
     test_user[field] = random_word_generator()
 
@@ -145,7 +144,7 @@ def test_incorrect_email_or_password(client, test_user):
     assert response.get_json()["error"] == "Email or Password is incorrect"
 
 
-def test_missing_email_or_password(client, test_user):
+def test_login_with_missing_email_or_password(client, test_user):
     field = random.choice(list(test_user.keys()))
     test_user[field] = None
 
