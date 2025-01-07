@@ -40,9 +40,9 @@ def signup():
         return jsonify({"error": "Password length is too small"}), 400
 
     try:
-        email_info = validate_email(email, check_deliverability=True)
+        email_info = validate_email(email)
         email = email_info.normalized
-    except EmailNotValidError as e:
+    except EmailNotValidError:
         return jsonify({"error": "Invalid email address"}), 400
 
     hashed_password = generate_password_hash(password)
@@ -69,13 +69,11 @@ def login():
     password = data.get("password")
 
     if not email or not password:
-        return jsonify({"error": "Email or password is missing"}), 400
+        return jsonify({"error": "Email or Password is missing"}), 400
 
     user = User.query.filter_by(email=email).first()
 
-    if not user:
-        return jsonify({"error": "User doesn't exist"}), 400
-    elif not check_password_hash(user.password, password):
+    if not user or not check_password_hash(user.password, password):
         return jsonify({"error": "Email or Password is incorrect"}), 400
 
     token = create_jwt_token(email)
