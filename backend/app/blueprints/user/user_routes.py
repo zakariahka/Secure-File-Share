@@ -14,6 +14,14 @@ def create_jwt_token(email):
     token = jwt.encode(payload, current_app.config["JWT_SECRET"], algorithm="HS256")
     return token
 
+
+@user_bp.route('/test', methods=['GET'])
+def test():
+    first_user = User.query.first()
+    if first_user:
+        return first_user.to_dict(), 200
+
+
 @user_bp.route("/signup", methods=["POST"])
 def signup():
     data = request.get_json()

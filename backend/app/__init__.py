@@ -1,5 +1,3 @@
-# backend/app/__init__.py
-
 from flask import Flask, send_from_directory
 from config import ProductionConfig, DevelopmentConfig, TestConfig
 from flask_sqlalchemy import SQLAlchemy
@@ -30,6 +28,7 @@ def create_app(config_object=None):
             app = Flask(__name__)
             app.config.from_object(DevelopmentConfig)
             CORS(app, supports_credentials=True, origins=app.config["CLIENT_URL"])
+
 
     db.init_app(app)
     migrate = Migrate(app, db)
