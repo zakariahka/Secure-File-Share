@@ -48,6 +48,4 @@ class File(db.Model):
             "id": self.id,
             "name": self.name,
             "user_id": self.user_id,
-            "nonce": self.nonce.hex(),
-            "hmac_tag": self.hmac_tag.hex(),
         }
