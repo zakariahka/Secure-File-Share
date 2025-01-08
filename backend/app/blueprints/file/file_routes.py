@@ -11,6 +11,7 @@ import base64
 import zlib
 
 @file_bp.route("/encrypt", methods=["POST"])
+@jwt_required
 def encrypt():
     aes_key = base64.b64decode(current_app.config["AES_KEY"])
     hmac_key = base64.b64decode(current_app.config["HMAC_KEY"])
@@ -63,3 +64,6 @@ def encrypt():
         "compressed_file": base64.b64encode(compressed_file).decode("utf-8"),
         "user_id": user_id
     }), 200
+
+@file_bp.route("/get-files", methods=["GET"])
+def get_files():
