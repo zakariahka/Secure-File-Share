@@ -23,7 +23,16 @@ def encrypt():
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
     
-    file = request.files["file"] 
+    file = request.files["file"]
+
+    file.seek(0, 2)
+    file_size = file.tell()
+    file.seek(0)
+
+    MAX_SIZE = 5 * 1054 * 1054 #5 mb
+
+    if file_size > MAX_SIZE:
+        return jsonify({"error": f"File is too large. Maximum size is {MAX_SIZE} mb"}), 400
 
     if file.filename == "":
         return jsonify({"error": "Did not include file"}), 400
