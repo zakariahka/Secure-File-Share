@@ -10,6 +10,7 @@ from Crypto.Cipher import AES
 from Crypto.Hash import HMAC, SHA256
 from Crypto.Random import get_random_bytes
 import base64
+import zlib
 
 @file_bp.route("/encrypt", methods=["POST"])
 def encrypt():
@@ -29,10 +30,13 @@ def encrypt():
         return jsonify({"error": "Did not include file"}), 400
     
     file_content = file.read()
+
+    # compressing data, although it doesnt make much of a difference :(
+    compressed_file = zlib.compress(file_content, level=5)
     
     cipher = AES.new(aes_key, AES.MODE_CTR)
-    encrypted_content = cipher.encrypt(file_content)
-
+    encrypted_content = cipher.encrypt(compressed_file)
+    
     hmac = HMAC.new(hmac_key, digestmod=SHA256)
     hmac.update(cipher.nonce + encrypted_content).digest()
     tag = hmac.digest()
@@ -54,10 +58,10 @@ def encrypt():
         db.session.rollback()
         return jsonify({"error": "Database error", "details": str(e)}), 500
 
-
     return jsonify({
         "message": "File encrypted successfully",
         "file_id": encrypted_file.id,
-        "encrypted_content": base64.b64encode(encrypted_content).decode("utf-8"),
+        "regular_file": base64.b64encode(file_content).decode("utf-8"),
+        "compressed_file": base64.b64encode(compressed_file).decode("utf-8"),
         "user_id": user_id
     }), 200
