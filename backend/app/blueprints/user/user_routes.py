@@ -9,10 +9,18 @@ from datetime import timedelta, datetime
 import jwt
 from sqlalchemy.exc import IntegrityError
 
-def create_jwt_token(email):
-    payload = {"email": email, "exp": datetime.utcnow() + timedelta(minutes=60)}
+def create_jwt_token(user):
+    payload = {"email": user.email, "id": user.id, "exp": datetime.utcnow() + timedelta(minutes=60)}
     token = jwt.encode(payload, current_app.config["JWT_SECRET"], algorithm="HS256")
     return token
+
+
+@user_bp.route('/test', methods=['GET'])
+def test():
+    first_user = User.query.first()
+    if first_user:
+        return first_user.to_dict(), 200
+
 
 @user_bp.route("/signup", methods=["POST"])
 def signup():
@@ -76,7 +84,7 @@ def login():
     if not user or not check_password_hash(user.password, password):
         return jsonify({"error": "Email or Password is incorrect"}), 400
 
-    token = create_jwt_token(email)
+    token = create_jwt_token(user)
 
     response = make_response(jsonify(message="User has successfully logged in", user=user.to_dict()))
     response.set_cookie(
