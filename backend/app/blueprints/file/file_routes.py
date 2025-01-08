@@ -11,7 +11,7 @@ import base64
 import zlib
 
 @file_bp.route("/encrypt", methods=["POST"])
-@jwt_required
+@jwt_required()
 def encrypt():
     aes_key = base64.b64decode(current_app.config["AES_KEY"])
     hmac_key = base64.b64decode(current_app.config["HMAC_KEY"])
@@ -41,7 +41,7 @@ def encrypt():
     tag = hmac.digest()
     
     try:
-        decoded_token = jwt.decode(token, current_app.config["JWT_SECRET"], algorithms=["HS256"])
+        decoded_token = jwt.decode(token, current_app.config["JWT_SECRET_KEY"], algorithms=["HS256"])
         user_id = decoded_token["id"]
     except jwt.ExpiredSignatureError:
         return jsonify({"error": "Token expired"}), 401
@@ -66,4 +66,12 @@ def encrypt():
     }), 200
 
 @file_bp.route("/get-files", methods=["GET"])
+@jwt_required()
 def get_files():
+    try:
+        files = db.session.query(File).all()
+        files_list = [file.to_dict() for file in files]
+    except Exception as e:
+        return jsonify({"error": "Database query failed" , "details": str(e)}), 500
+    
+    return files_list, 200
