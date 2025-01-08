@@ -1,7 +1,5 @@
 from . import file_bp
 from flask import jsonify, request, make_response, current_app
-from cryptography.fernet import Fernet
-import os
 from app import db
 from flask_jwt_extended import jwt_required, decode_token
 import jwt
@@ -31,7 +29,7 @@ def encrypt():
     
     file_content = file.read()
 
-    # compressing data, although it doesnt make much of a difference :(
+    # compressing the file, although it doesnt make much of a difference :(
     compressed_file = zlib.compress(file_content, level=5)
     
     cipher = AES.new(aes_key, AES.MODE_CTR)
@@ -54,9 +52,9 @@ def encrypt():
     try:
         db.session.add(encrypted_file)
         db.session.commit()
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({"error": "Database error", "details": str(e)}), 500
+        return jsonify({"error": "Database error"}), 500
 
     return jsonify({
         "message": "File encrypted successfully",
