@@ -8,10 +8,12 @@ from config import TestConfig
 from Crypto.Cipher import AES
 from Crypto.Hash import HMAC, SHA256
 from Crypto.Random import get_random_bytes
+import os
 
 @pytest.fixture
 def client():
-    app = create_app(TestConfig)
+    app = create_app()
+    os.environ["env"] = "testing" 
     with app.app_context():
         db.create_all()
         yield app.test_client()
