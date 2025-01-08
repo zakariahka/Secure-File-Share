@@ -5,6 +5,9 @@ import random
 import string
 from werkzeug.security import generate_password_hash 
 from config import TestConfig
+from Crypto.Cipher import AES
+from Crypto.Hash import HMAC, SHA256
+from Crypto.Random import get_random_bytes
 
 @pytest.fixture
 def client():
@@ -152,4 +155,3 @@ def test_login_with_missing_email_or_password(client, test_user):
 
     assert response.status_code == 400
     assert response.get_json()["error"] == "Email or Password is missing"
-

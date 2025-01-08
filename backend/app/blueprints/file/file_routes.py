@@ -6,10 +6,15 @@ from app import db
 from flask_jwt_extended import jwt_required, decode_token
 import jwt
 from app.models import File, User
+from Crypto.Cipher import AES
+from Crypto.Hash import HMAC, SHA256
+from Crypto.Random import get_random_bytes
+import base64
 
 @file_bp.route("/encrypt", methods=["POST"])
 def encrypt():
-    key = current_app.config["ENCRYPTION_KEY"]
+    aes_key = base64.b64decode(current_app.config["AES_KEY"])
+    hmac_key = base64.b64decode(current_app.config["HMAC_KEY"])
 
     token = request.cookies.get("token")
     if not token:
@@ -25,13 +30,22 @@ def encrypt():
     
     file_content = file.read()
     
-    fernet = Fernet(key)
-    encrypted_content = fernet.encrypt(file_content)
+    cipher = AES.new(aes_key, AES.MODE_CTR)
+    encrypted_content = cipher.encrypt(file_content)
 
-    decoded_token = jwt.decode(token, current_app.config["JWT_SECRET"], algorithms=["HS256"])
-    user_id = decoded_token["id"]
+    hmac = HMAC.new(hmac_key, digestmod=SHA256)
+    hmac.update(cipher.nonce + encrypted_content).digest()
+    tag = hmac.digest()
+    
+    try:
+        decoded_token = jwt.decode(token, current_app.config["JWT_SECRET"], algorithms=["HS256"])
+        user_id = decoded_token["id"]
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
 
-    encrypted_file = File(name=file.filename, encrypted_file=encrypted_content, user_id=user_id)
+    encrypted_file = File(name=file.filename, encrypted_file=encrypted_content, nonce=cipher.nonce, hmac_tag=tag, user_id=user_id)
 
     try:
         db.session.add(encrypted_file)
@@ -44,10 +58,6 @@ def encrypt():
     return jsonify({
         "message": "File encrypted successfully",
         "file_id": encrypted_file.id,
-        "encrypted_content": encrypted_content.decode("utf-8"),
+        "encrypted_content": base64.b64encode(encrypted_content).decode("utf-8"),
         "user_id": user_id
     }), 200
-
-@file_bp.route("/decrypt", methods=["GET"])
-def decrypt():
-    return None

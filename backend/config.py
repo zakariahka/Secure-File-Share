@@ -11,6 +11,8 @@ class DevelopmentConfig:
     CLIENT_URL = os.getenv("CLIENT_URL")
     ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
     PORT = os.getenv("DEV_PORT")
+    AES_KEY=os.getenv("AES_KEY")
+    HMAC_KEY=os.getenv("HMAC_KEY")
 
 class ProductionConfig:
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
@@ -18,6 +20,8 @@ class ProductionConfig:
     JWT_SECRET = os.getenv("JWT_SECRET")
     ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
     PORT = os.getenv("PROD_PORT")
+    AES_KEY=os.getenv("AES_KEY")
+    HMAC_KEY=os.getenv("HMAC_KEY")
 
 class TestConfig:
     TESTING = True
@@ -26,3 +30,5 @@ class TestConfig:
     JWT_SECRET = os.getenv("JWT_SECRET")
     ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
     PORT = os.getenv("TEST_PORT")
+    AES_KEY=os.getenv("AES_KEY")
+    HMAC_KEY=os.getenv("HMAC_KEY")
