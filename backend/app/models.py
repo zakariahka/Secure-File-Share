@@ -30,13 +30,17 @@ class File(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(255), nullable=False)
     encrypted_file = db.Column(db.LargeBinary, nullable=False)
+    nonce = db.Column(db.LargeBinary, nullable=False)
+    hmac_tag = db.Column(db.LargeBinary, nullable=False)
     user_id = db.Column(db.Integer(), db.ForeignKey("users.id"), nullable=False)
 
     user = db.relationship("User", back_populates="files")
 
-    def __init__(self, name, encrypted_file, user_id):
+    def __init__(self, name, encrypted_file, nonce, hmac_tag, user_id):
         self.name = name
         self.encrypted_file = encrypted_file
+        self.nonce = nonce
+        self.hmac_tag = hmac_tag
         self.user_id = user_id
 
     def to_dict(self):
@@ -44,4 +48,6 @@ class File(db.Model):
             "id": self.id,
             "name": self.name,
             "user_id": self.user_id,
+            "nonce": self.nonce.hex(),
+            "hmac_tag": self.hmac_tag.hex(),
         }
