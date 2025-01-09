@@ -42,6 +42,14 @@ def encrypt():
     token = request.cookies.get("token")
     if not token:
         return jsonify({"error": "Unauthorized"}), 401
+    
+    try:
+        decoded_token = jwt.decode(token, current_app.config["JWT_SECRET_KEY"], algorithms=["HS256"])
+        user_id = decoded_token["id"]
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Access token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid access token"}), 401
 
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
@@ -71,14 +79,6 @@ def encrypt():
     hmac = HMAC.new(hmac_key, digestmod=SHA256)
     hmac.update(cipher.nonce + encrypted_content).digest()
     tag = hmac.digest()
-    
-    try:
-        decoded_token = jwt.decode(token, current_app.config["JWT_SECRET_KEY"], algorithms=["HS256"])
-        user_id = decoded_token["id"]
-    except jwt.ExpiredSignatureError:
-        return jsonify({"error": "Access token expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"error": "Invalid access token"}), 401
 
     encrypted_file = File(name=file.filename, encrypted_file=encrypted_content, nonce=cipher.nonce, hmac_tag=tag, user_id=user_id)
 
@@ -100,4 +100,5 @@ def encrypt():
 @jwt_required
 @file_bp.route("/decrypt", methods=["GET"])
 def decrypt():
+    token = request.cookies.get("token")
     return
