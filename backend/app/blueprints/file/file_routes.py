@@ -10,6 +10,29 @@ from Crypto.Random import get_random_bytes
 import base64
 import zlib
 
+@file_bp.route("/get-files", methods=["GET"])
+@jwt_required()
+def get_files():
+    token = request.cookies.get("token")
+    if not token:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    try:
+        decoded_token = jwt.decode(token, current_app.config["JWT_SECRET_KEY"], algorithms=["HS256"])
+        user_id = decoded_token["id"]
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Access token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid access token"}), 401
+
+    try:
+        files = User.get_all_files(user_id)
+        files_list = [file.to_dict() for file in files]
+    except Exception as e:
+        return jsonify({"error": "Database query failed" , "details": str(e)}), 500
+    
+    return files_list, 200
+
 @file_bp.route("/encrypt", methods=["POST"])
 @jwt_required()
 def encrypt():
@@ -39,7 +62,7 @@ def encrypt():
     
     file_content = file.read()
 
-    # compressing the file, although it doesnt make much of a difference :(
+    #compressing the file, although it doesnt make much of a difference :(
     compressed_file = zlib.compress(file_content, level=5)
     
     cipher = AES.new(aes_key, AES.MODE_CTR)
@@ -53,9 +76,9 @@ def encrypt():
         decoded_token = jwt.decode(token, current_app.config["JWT_SECRET_KEY"], algorithms=["HS256"])
         user_id = decoded_token["id"]
     except jwt.ExpiredSignatureError:
-        return jsonify({"error": "Token expired"}), 401
+        return jsonify({"error": "Access token expired"}), 401
     except jwt.InvalidTokenError:
-        return jsonify({"error": "Invalid token"}), 401
+        return jsonify({"error": "Invalid access token"}), 401
 
     encrypted_file = File(name=file.filename, encrypted_file=encrypted_content, nonce=cipher.nonce, hmac_tag=tag, user_id=user_id)
 
@@ -74,13 +97,7 @@ def encrypt():
         "user_id": user_id
     }), 200
 
-@file_bp.route("/get-files", methods=["GET"])
-@jwt_required()
-def get_files():
-    try:
-        files = db.session.query(File).all()
-        files_list = [file.to_dict() for file in files]
-    except Exception as e:
-        return jsonify({"error": "Database query failed" , "details": str(e)}), 500
-    
-    return files_list, 200
+@jwt_required
+@file_bp.route("/decrypt", methods=["GET"])
+def decrypt():
+    return
