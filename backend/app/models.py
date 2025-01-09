@@ -26,11 +26,12 @@ class User(db.Model):
     
     @staticmethod
     def get_all_files(user_id):
-        return File.query.filter_by(user_id=user_id).all()
-    
+        return [file_id[0] for file_id in File.query.with_entities(File.id).filter_by(user_id=user_id).all()]
+
     @staticmethod
     def get_file(file_id, user_id):
-        return File.query.filter_by(id=file_id, user_id=user_id).first()
+        file = File.query.with_entities(File.id).filter_by(id=file_id, user_id=user_id).first()
+        return file[0] if file else None
     
 class File(db.Model):
     __tablename__ = "files"

@@ -9,6 +9,7 @@ from Crypto.Hash import HMAC, SHA256
 from Crypto.Random import get_random_bytes
 import base64
 import zlib
+import logging
 
 @file_bp.route("/get-files", methods=["GET"])
 @jwt_required()
@@ -27,11 +28,11 @@ def get_files():
 
     try:
         files = User.get_all_files(user_id)
-        files_list = [file.to_dict() for file in files]
     except Exception as e:
+        logging.error("details: %s", str(e))
         return jsonify({"error": "Database query failed"}), 500
     
-    return files_list, 200
+    return files, 200
 
 @file_bp.route("/encrypt", methods=["POST"])
 @jwt_required()
@@ -92,8 +93,6 @@ def encrypt():
     return jsonify({
         "message": "File encrypted successfully",
         "file_id": encrypted_file.id,
-        "regular_file": base64.b64encode(file_content).decode("utf-8"),
-        "compressed_file": base64.b64encode(compressed_file).decode("utf-8"),
         "user_id": user_id
     }), 200
 
@@ -101,4 +100,19 @@ def encrypt():
 @file_bp.route("/decrypt", methods=["GET"])
 def decrypt():
     token = request.cookies.get("token")
+    if not token:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    try:
+        decoded_token = jwt.decode(token, current_app.config["JWT_SECRET_KEY"], algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Expired access token"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "invalid access token"}), 401
+    
+    body = request.get_json()
+    if not body:
+        return jsonify({"error": "Request body must be a json"})
+    
+    body.get("file_id")
     return
