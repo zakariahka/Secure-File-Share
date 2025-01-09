@@ -29,7 +29,7 @@ def get_files():
         files = User.get_all_files(user_id)
         files_list = [file.to_dict() for file in files]
     except Exception as e:
-        return jsonify({"error": "Database query failed" , "details": str(e)}), 500
+        return jsonify({"error": "Database query failed"}), 500
     
     return files_list, 200
 
