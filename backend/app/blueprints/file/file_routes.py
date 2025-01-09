@@ -10,7 +10,31 @@ from Crypto.Random import get_random_bytes
 import base64
 import zlib
 
+@file_bp.route("/get-files", methods=["GET"])
+@jwt_required()
+def get_files():
+    token = request.cookies.get("token")
+    if not token:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    try:
+        decoded_token = jwt.decode(token, current_app.config["JWT_SECRET_KEY"], algorithms=["HS256"])
+        user_id = decoded_token["id"]
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Access token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid access token"}), 401
+
+    try:
+        files = User.get_all_files(user_id)
+        files_list = [file.to_dict() for file in files]
+    except Exception as e:
+        return jsonify({"error": "Database query failed"}), 500
+    
+    return files_list, 200
+
 @file_bp.route("/encrypt", methods=["POST"])
+@jwt_required()
 def encrypt():
     aes_key = base64.b64decode(current_app.config["AES_KEY"])
     hmac_key = base64.b64decode(current_app.config["HMAC_KEY"])
@@ -18,18 +42,35 @@ def encrypt():
     token = request.cookies.get("token")
     if not token:
         return jsonify({"error": "Unauthorized"}), 401
+    
+    try:
+        decoded_token = jwt.decode(token, current_app.config["JWT_SECRET_KEY"], algorithms=["HS256"])
+        user_id = decoded_token["id"]
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Access token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid access token"}), 401
 
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
     
-    file = request.files["file"] 
+    file = request.files["file"]
+
+    file.seek(0, 2)
+    file_size = file.tell()
+    file.seek(0)
+
+    MAX_SIZE = 5 * 1054 * 1054 #5 mb
+
+    if file_size > MAX_SIZE:
+        return jsonify({"error": f"File is too large. Maximum size is {MAX_SIZE} mb"}), 400
 
     if file.filename == "":
         return jsonify({"error": "Did not include file"}), 400
     
     file_content = file.read()
 
-    # compressing the file, although it doesnt make much of a difference :(
+    #compressing the file, although it doesnt make much of a difference :(
     compressed_file = zlib.compress(file_content, level=5)
     
     cipher = AES.new(aes_key, AES.MODE_CTR)
@@ -38,14 +79,6 @@ def encrypt():
     hmac = HMAC.new(hmac_key, digestmod=SHA256)
     hmac.update(cipher.nonce + encrypted_content).digest()
     tag = hmac.digest()
-    
-    try:
-        decoded_token = jwt.decode(token, current_app.config["JWT_SECRET"], algorithms=["HS256"])
-        user_id = decoded_token["id"]
-    except jwt.ExpiredSignatureError:
-        return jsonify({"error": "Token expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"error": "Invalid token"}), 401
 
     encrypted_file = File(name=file.filename, encrypted_file=encrypted_content, nonce=cipher.nonce, hmac_tag=tag, user_id=user_id)
 
@@ -63,3 +96,9 @@ def encrypt():
         "compressed_file": base64.b64encode(compressed_file).decode("utf-8"),
         "user_id": user_id
     }), 200
+
+@jwt_required
+@file_bp.route("/decrypt", methods=["GET"])
+def decrypt():
+    token = request.cookies.get("token")
+    return

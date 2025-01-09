@@ -24,6 +24,14 @@ class User(db.Model):
             "files": [file.to_dict() for file in self.files],
         }
     
+    @staticmethod
+    def get_all_files(user_id):
+        return File.query.filter_by(user_id=user_id).all()
+    
+    @staticmethod
+    def get_file(file_id, user_id):
+        return File.query.filter_by(id=file_id, user_id=user_id).first()
+    
 class File(db.Model):
     __tablename__ = "files"
 
@@ -48,6 +56,4 @@ class File(db.Model):
             "id": self.id,
             "name": self.name,
             "user_id": self.user_id,
-            "nonce": self.nonce.hex(),
-            "hmac_tag": self.hmac_tag.hex(),
         }

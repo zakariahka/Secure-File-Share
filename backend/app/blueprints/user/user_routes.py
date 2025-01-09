@@ -10,8 +10,13 @@ import jwt
 from sqlalchemy.exc import IntegrityError
 
 def create_jwt_token(user):
-    payload = {"email": user.email, "id": user.id, "exp": datetime.utcnow() + timedelta(minutes=60)}
-    token = jwt.encode(payload, current_app.config["JWT_SECRET"], algorithm="HS256")
+    payload = {
+        "sub": user.id,
+        "email": user.email,
+        "id": user.id,
+        "exp": datetime.utcnow() + timedelta(minutes=60),
+    }
+    token = jwt.encode(payload, current_app.config["JWT_SECRET_KEY"], algorithm="HS256")
     return token
 
 
@@ -101,20 +106,28 @@ def check_auth():
         return jsonify({"error": "Unauthorized"}), 401
 
     try:
-        decoded_token = jwt.decode(token, current_app.config["JWT_SECRET"], algorithms=["HS256"])
-        user_data = User.query.filter_by(email=decoded_token["email"]).first()
+        decoded_token = jwt.decode(token, current_app.config["JWT_SECRET_KEY"], algorithms=["HS256"])
+        user_id = decoded_token.get("sub")
 
-        if user_data:
-            user = {
-                "name": user_data.name,
-                "email": user_data.email
-            }
+        if not user_id:
+            return jsonify({"error": "Unauthorized - Missing 'sub' claim"}), 401
+
+        user_data = User.query.filter_by(id=user_id).first()
+
+        if not user_data:
+            return jsonify({"error": "Unauthorized - User not found"}), 401
+        
+        user = {
+            "name": user_data.name,
+            "email": user_data.email
+        }
         
         return jsonify({"message": "Authorized", "user": user}), 200
     except jwt.ExpiredSignatureError:
         return jsonify({"error": "Unauthorized - Token expired"}), 401
     except jwt.InvalidTokenError:
         return jsonify({"error": "Unauthorized - Token expired"}), 401
+    
 
 @user_bp.route("/logout", methods=["POST"])
 def logout():
