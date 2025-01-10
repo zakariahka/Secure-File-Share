@@ -106,15 +106,12 @@ def decrypt():
         logging.error("Decryption failed: %s", str(e))
         return jsonify({"error": "Key incorrect or message corrupted"}), 400
 
-    try:
-        decrypted_text = decrypted_content.decode('utf-8')
-        return jsonify({
-            "message": "File decrypted successfully",
-            "file_content": decrypted_text
-        }), 200
-    except UnicodeDecodeError:
+    mime_type, _ = mimetypes.guess_type(file.name)
+    if mime_type and (mime_type.startswith("text") or mime_type == "application/json"):
+        decoded_text = decrypted_content.decode('utf-8')
+        return jsonify({"file_content": decoded_text})
+    else:
         decrypted_stream = io.BytesIO(decrypted_content)
-        mime_type, _ = mimetypes.guess_type(file.name)
         if mime_type is None:
             mime_type = 'application/octet-stream'
 
@@ -123,4 +120,4 @@ def decrypt():
             as_attachment=True,
             download_name=file.name,
             mimetype=mime_type
-        )
+        ), 200
