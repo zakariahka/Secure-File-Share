@@ -22,6 +22,7 @@ def get_files():
     
     return jsonify(files), 200
 
+
 @file_bp.route("/encrypt", methods=["POST"])
 @jwt_required()
 def encrypt():
@@ -76,6 +77,7 @@ def encrypt():
         "file_id": encrypted_file.id,
         "user_id": user_id
     }), 200
+
 
 @file_bp.route("/decrypt", methods=["POST"])
 @jwt_required()
