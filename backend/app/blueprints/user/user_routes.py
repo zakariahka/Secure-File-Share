@@ -94,14 +94,14 @@ def login():
 
     response = make_response(jsonify(message="User has successfully logged in", user=user.to_dict()))
     response.set_cookie(
-        "token", token, httponly=True, samesite="Lax", secure=False, max_age=86400
+        "access_token_cookie", token, httponly=True, samesite="Lax", secure=False, max_age=86400
     )
 
     return response, 200
 
 @user_bp.route("/auth", methods=["GET"])
 def check_auth():
-    token = request.cookies.get("token")
+    token = request.cookies.get("access_token_cookie")
 
     if not token:
         return jsonify({"error": "Unauthorized"}), 401
@@ -135,7 +135,7 @@ def check_auth():
 def logout():
     try:
         response = make_response(jsonify({"message": "User successfully logged out"}))
-        response.set_cookie("token", "", max_age=0, httponly=True)
+        response.set_cookie("access_token_cookie", "", max_age=0, httponly=True)
         return response, 200
     except Exception as e:
         logging.error("Error tryin to log out %s", str(e))
