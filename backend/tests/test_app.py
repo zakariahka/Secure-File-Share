@@ -39,6 +39,7 @@ def test_user():
     db.session.commit()
     
     return {
+        "id": user.id,
         "email": email,
         "password": password,
     }
@@ -140,7 +141,7 @@ def test_login(client, test_user):
 
 
 def test_login_with_incorrect_email_or_password(client, test_user):
-    field = random.choice(list(test_user.keys()))
+    field = random.choice(["password", "email"])
     test_user[field] = random_word_generator()
 
     response = client.post('/user/login', json=test_user)
@@ -150,7 +151,7 @@ def test_login_with_incorrect_email_or_password(client, test_user):
 
 
 def test_login_with_missing_email_or_password(client, test_user):
-    field = random.choice(list(test_user.keys()))
+    field = random.choice(["email", "password"])
     test_user[field] = None
 
     response = client.post('/user/login', json=test_user)
