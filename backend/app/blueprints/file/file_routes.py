@@ -13,9 +13,8 @@ import mimetypes
 @jwt_required()
 def get_files():
     user_id = get_jwt_identity()
-
     try:
-        files = User.get_all_file_ids(user_id)
+        files = User.get_all_files(user_id)
     except Exception as e:
         logging.error("Database query failed: %s", str(e))
         return jsonify({"error": "Database query failed"}), 500
@@ -111,13 +110,18 @@ def decrypt():
         decoded_text = decrypted_content.decode('utf-8')
         return jsonify({"file_content": decoded_text})
     else:
-        decrypted_stream = io.BytesIO(decrypted_content)
-        if mime_type is None:
-            mime_type = 'application/octet-stream'
+        try:
+            decrypted_stream = io.BytesIO(decrypted_content)
+            if mime_type is None:
+                mime_type = 'application/octet-stream'
 
-        return send_file(
-            decrypted_stream,
-            as_attachment=True,
-            download_name=file.name,
-            mimetype=mime_type
-        ), 200
+            return send_file(
+                decrypted_stream,
+                as_attachment=True,
+                download_name=file.name,
+                mimetype=mime_type
+            ), 200
+        
+        except Exception as e:
+            logging.error("Decryption failed %s", str(e))
+            return jsonify({"error": "Unable to decrypt file"}), 500
