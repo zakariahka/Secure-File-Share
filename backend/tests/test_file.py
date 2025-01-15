@@ -41,18 +41,20 @@ def test_user():
         "password": password,
     }
 
+def mock_jwt_required(f):
+    def wrapper(*args, **kwargs):
+        return f(*args, **kwargs)
+    return wrapper
+
+
 def test_unauthorized(client):
     request = client.post('file/encrypt')
 
     assert request.status_code == 401
     assert request.get_json()["msg"] == "Missing cookie \"access_token_cookie\""
 
-def mock_jwt_required(f):
-    """Decorator to mock jwt_required."""
-    def wrapper(*args, **kwargs):
-        return f(*args, **kwargs)
-    return wrapper
 
 @patch('flask_jwt_extended.jwt_required', mock_jwt_required)
 def test_missing_file(client):
     request = client.post('file/encrypt')
+    
