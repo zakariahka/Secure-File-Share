@@ -6,6 +6,8 @@ import string
 from werkzeug.security import generate_password_hash 
 import os
 from unittest.mock import patch
+from unittest import mock
+from flask_jwt_extended.view_decorators import verify_jwt_in_request
 
 @pytest.fixture
 def client():
@@ -14,8 +16,6 @@ def client():
     with app.app_context():
         db.create_all()
         yield app.test_client()
-        db.session.remove()
-        db.drop_all()
 
 def random_word_generator():
     return ''.join(random.choices(string.ascii_letters, k=8))
@@ -42,19 +42,18 @@ def test_user():
     }
 
 def mock_jwt_required(f):
-    def wrapper(*args, **kwargs):
-        return f(*args, **kwargs)
-    return wrapper
+    return f
+
+@patch("flask_jwt_extended.view_decorators.verify_jwt_in_request", new=lambda*args, **kwargs: None)
+@patch('app.blueprints.file.file_routes.get_jwt_identity', return_value=1)
+def test_get_files(mock_get_jwt_identity, client, test_user):
+    response = client.get("file/get-files")
+    
+    assert response.status_code == 200
 
 
 def test_unauthorized(client):
-    request = client.post('file/encrypt')
+    request = client.post('/file/encrypt')
 
     assert request.status_code == 401
     assert request.get_json()["msg"] == "Missing cookie \"access_token_cookie\""
-
-
-@patch('flask_jwt_extended.jwt_required', mock_jwt_required)
-def test_missing_file(client):
-    request = client.post('file/encrypt')
-    
