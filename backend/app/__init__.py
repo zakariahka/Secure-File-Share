@@ -13,7 +13,6 @@ def create_app():
     HERE = os.path.abspath(os.path.dirname(__file__))  
     BUILD_DIR = os.path.abspath(os.path.join(HERE, '..', '..', 'frontend', 'build'))
 
-
     env = os.getenv("env", "development")
     if env == "production":
         app = Flask(
