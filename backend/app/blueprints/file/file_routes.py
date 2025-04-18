@@ -38,7 +38,7 @@ def encrypt():
     file_size = file.tell()
     file.seek(0)
 
-    MAX_SIZE = 5 * 1024 * 1024   #5 MB
+    MAX_SIZE = 5 * 1024 * 1024   #5 MB maximum file size (might change later)
 
     if file_size > MAX_SIZE:
         return jsonify({"error": "File is too large. Maximum size is 5 MB"}), 400
@@ -73,8 +73,7 @@ def encrypt():
 
     return jsonify({
         "message": "File encrypted successfully",
-        "file_id": encrypted_file.id,
-        "user_id": user_id
+        "file_id": encrypted_file.id
     }), 200
 
 
