@@ -25,8 +25,8 @@ class User(db.Model):
         }
     
     @staticmethod
-    def get_all_file_ids(user_id):
-        return [file_id[0] for file_id in File.query.with_entities(File.id).filter_by(user_id=user_id).all()]
+    def get_all_files(user_id):
+        return [{"id": file.id, "name": file.name} for file in File.query.with_entities(File.id, File.name).filter_by(user_id=user_id).all()]
 
     @staticmethod
     def get_file_id(file_id, user_id):

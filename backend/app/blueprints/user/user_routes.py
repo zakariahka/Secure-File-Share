@@ -8,6 +8,7 @@ import psycopg2
 from datetime import timedelta, datetime
 import jwt
 from sqlalchemy.exc import IntegrityError
+import logging
 
 def create_jwt_token(user):
     payload = {
@@ -93,14 +94,14 @@ def login():
 
     response = make_response(jsonify(message="User has successfully logged in", user=user.to_dict()))
     response.set_cookie(
-        "token", token, httponly=True, samesite="Lax", secure=False, max_age=86400
+        "access_token_cookie", token, httponly=True, samesite="Lax", secure=False, max_age=86400
     )
 
     return response, 200
 
 @user_bp.route("/auth", methods=["GET"])
 def check_auth():
-    token = request.cookies.get("token")
+    token = request.cookies.get("access_token_cookie")
 
     if not token:
         return jsonify({"error": "Unauthorized"}), 401
@@ -118,6 +119,7 @@ def check_auth():
             return jsonify({"error": "Unauthorized - User not found"}), 401
         
         user = {
+            "id": user_id,
             "name": user_data.name,
             "email": user_data.email
         }
@@ -131,6 +133,10 @@ def check_auth():
 
 @user_bp.route("/logout", methods=["POST"])
 def logout():
-    response = make_response(jsonify({"message": "User successfully logged out"}))
-    response.set_cookie("token", "", httpOnly=True, max_age=0)
-    return response, 200
+    try:
+        response = make_response(jsonify({"message": "User successfully logged out"}))
+        response.set_cookie("access_token_cookie", "", max_age=0, httponly=True)
+        return response, 200
+    except Exception as e:
+        logging.error("Error tryin to log out %s", str(e))
+        return jsonify({"error": "An error occurred while trying to log out"}), 500

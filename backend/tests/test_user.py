@@ -4,10 +4,6 @@ from app.models import User
 import random
 import string
 from werkzeug.security import generate_password_hash 
-from config import TestConfig
-from Crypto.Cipher import AES
-from Crypto.Hash import HMAC, SHA256
-from Crypto.Random import get_random_bytes
 import os
 
 @pytest.fixture
@@ -43,7 +39,6 @@ def test_user():
         "email": email,
         "password": password,
     }
-
 
 def test_signup(client):
     password = random_word_generator()

@@ -13,9 +13,8 @@ import mimetypes
 @jwt_required()
 def get_files():
     user_id = get_jwt_identity()
-
     try:
-        files = User.get_all_file_ids(user_id)
+        files = User.get_all_files(user_id)
     except Exception as e:
         logging.error("Database query failed: %s", str(e))
         return jsonify({"error": "Database query failed"}), 500
@@ -39,7 +38,7 @@ def encrypt():
     file_size = file.tell()
     file.seek(0)
 
-    MAX_SIZE = 5 * 1024 * 1024   #5 MB
+    MAX_SIZE = 5 * 1024 * 1024   #5 MB maximum file size (might change later)
 
     if file_size > MAX_SIZE:
         return jsonify({"error": "File is too large. Maximum size is 5 MB"}), 400
@@ -74,8 +73,7 @@ def encrypt():
 
     return jsonify({
         "message": "File encrypted successfully",
-        "file_id": encrypted_file.id,
-        "user_id": user_id
+        "file_id": encrypted_file.id
     }), 200
 
 
@@ -106,21 +104,23 @@ def decrypt():
         logging.error("Decryption failed: %s", str(e))
         return jsonify({"error": "Key incorrect or message corrupted"}), 400
 
-    try:
-        decrypted_text = decrypted_content.decode('utf-8')
-        return jsonify({
-            "message": "File decrypted successfully",
-            "file_content": decrypted_text
-        }), 200
-    except UnicodeDecodeError:
-        decrypted_stream = io.BytesIO(decrypted_content)
-        mime_type, _ = mimetypes.guess_type(file.name)
-        if mime_type is None:
-            mime_type = 'application/octet-stream'
+    mime_type, _ = mimetypes.guess_type(file.name)
+    if mime_type and (mime_type.startswith("text") or mime_type == "application/json"):
+        decoded_text = decrypted_content.decode('utf-8')
+        return jsonify({"file_content": decoded_text})
+    else:
+        try:
+            decrypted_stream = io.BytesIO(decrypted_content)
+            if mime_type is None:
+                mime_type = 'application/octet-stream'
 
-        return send_file(
-            decrypted_stream,
-            as_attachment=True,
-            download_name=file.name,
-            mimetype=mime_type
-        )
+            return send_file(
+                decrypted_stream,
+                as_attachment=True,
+                download_name=file.name,
+                mimetype=mime_type
+            ), 200
+        
+        except Exception as e:
+            logging.error("Decryption failed %s", str(e))
+            return jsonify({"error": "Unable to decrypt file"}), 500
