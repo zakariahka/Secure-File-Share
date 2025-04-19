@@ -56,7 +56,7 @@ def test_get_files(mock_get_jwt_identity, client, test_user):
 
 @patch("flask_jwt_extended.view_decorators.verify_jwt_in_request", new=lambda*args, **kwargs: None)
 @patch("app.blueprints.file.file_routes.get_jwt_identity", return_value=1)
-def test_encrypt(mock_jwt_identity, client):
+def test_encrypt_txt(mock_jwt_identity, client):
     with open("utils/test_file.txt", "rb") as test_file:
         file_data = {
             "file": (test_file, "test_file.txt")
@@ -69,6 +69,24 @@ def test_encrypt(mock_jwt_identity, client):
 
         encrypted_file = db.session.get(File, body["file_id"])
         assert encrypted_file.name == "test_file.txt"
+
+
+@patch("flask_jwt_extended.view_decorators.verify_jwt_in_request", new=lambda*args, **kwargs: None)
+@patch("app.blueprints.file.file_routes.get_jwt_identity", return_value=1)
+def test_encrypt_pdf(mock_jwt_identity, client):
+    with open("utils/test_file.pdf", "rb") as test_file:
+        file_data = {
+            "file": (test_file, "test_file.pdf")
+        }
+        response = client.post("/file/encrypt", data=file_data, content_type="multipart/form-data")
+        body = response.get_json()
+
+        assert response.status_code == 200
+        assert body["message"] == "File encrypted successfully"
+
+        encrypted_file = db.session.get(File, body["file_id"])
+        assert encrypted_file.name == "test_file.pdf"
+
 
 def test_unauthorized(client):
     request = client.post('/file/encrypt')
