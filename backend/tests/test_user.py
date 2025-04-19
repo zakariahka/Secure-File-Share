@@ -1,10 +1,12 @@
 import pytest
+from unittest.mock import patch
 from app import create_app, db
 from app.models import User
 import random
 import string
 from werkzeug.security import generate_password_hash 
 import os
+from flask_jwt_extended import verify_jwt_in_request
 
 @pytest.fixture
 def client():
@@ -153,3 +155,7 @@ def test_login_with_missing_email_or_password(client, test_user):
 
     assert response.status_code == 400
     assert response.get_json()["error"] == "Email or Password is missing"
+
+def test_logout(client):
+    response = client.post("user/logout")
+    assert response.status_code == 200
