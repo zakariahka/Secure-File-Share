@@ -87,6 +87,7 @@ def test_encrypt_pdf(mock_jwt_identity, client):
         encrypted_file = db.session.get(File, body["file_id"])
         assert encrypted_file.name == "test_file.pdf"
         assert encrypted_file.user_id == 1
+        assert encrypted_file.id == body["file_id"]
 
 
 @patch("flask_jwt_extended.view_decorators.verify_jwt_in_request", new=lambda*args, **kwargs: None)
@@ -105,6 +106,7 @@ def test_encrypt_csv(mock_jwt_identity, client):
         encrypted_file = db.session.get(File, body["file_id"])
         assert encrypted_file.name == "test_file.csv"
         assert encrypted_file.user_id == 1
+        assert encrypted_file.id == body["file_id"]
 
 
 def test_unauthorized(client):
