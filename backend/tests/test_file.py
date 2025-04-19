@@ -9,6 +9,7 @@ from unittest.mock import patch
 from unittest import mock
 from flask_jwt_extended.view_decorators import verify_jwt_in_request
 import io
+from app.blueprints.file.file_routes import File, db
 
 @pytest.fixture
 def client():
@@ -60,9 +61,14 @@ def test_encrypt(mock_jwt_identity, client):
         file_data = {
             "file": (test_file, "test_file.txt")
         }
-        response = client.post("file/encrypt", data=file_data, content_type="multipart/form-data")
+        response = client.post("/file/encrypt", data=file_data, content_type="multipart/form-data")
+        body = response.get_json()
 
         assert response.status_code == 200
+        assert body["message"] == "File encrypted successfully"
+
+        encrypted_file = db.session.get(File, body["file_id"])
+        assert encrypted_file.name == "test_file.txt"
 
 def test_unauthorized(client):
     request = client.post('/file/encrypt')
