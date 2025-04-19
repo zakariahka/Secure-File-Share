@@ -8,6 +8,8 @@ import os
 from unittest.mock import patch
 from unittest import mock
 from flask_jwt_extended.view_decorators import verify_jwt_in_request
+import io
+from app.blueprints.file.file_routes import File, db
 
 @pytest.fixture
 def client():
@@ -44,13 +46,29 @@ def test_user():
 def mock_jwt_required(f):
     return f
 
+
 @patch("flask_jwt_extended.view_decorators.verify_jwt_in_request", new=lambda*args, **kwargs: None)
-@patch('app.blueprints.file.file_routes.get_jwt_identity', return_value=1)
+@patch("app.blueprints.file.file_routes.get_jwt_identity", return_value=1)
 def test_get_files(mock_get_jwt_identity, client, test_user):
     response = client.get("file/get-files")
-    
+
     assert response.status_code == 200
 
+@patch("flask_jwt_extended.view_decorators.verify_jwt_in_request", new=lambda*args, **kwargs: None)
+@patch("app.blueprints.file.file_routes.get_jwt_identity", return_value=1)
+def test_encrypt(mock_jwt_identity, client):
+    with open("utils/test_file.txt", "rb") as test_file:
+        file_data = {
+            "file": (test_file, "test_file.txt")
+        }
+        response = client.post("/file/encrypt", data=file_data, content_type="multipart/form-data")
+        body = response.get_json()
+
+        assert response.status_code == 200
+        assert body["message"] == "File encrypted successfully"
+
+        encrypted_file = db.session.get(File, body["file_id"])
+        assert encrypted_file.name == "test_file.txt"
 
 def test_unauthorized(client):
     request = client.post('/file/encrypt')
