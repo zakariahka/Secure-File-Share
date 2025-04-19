@@ -53,10 +53,16 @@ def test_get_files(mock_get_jwt_identity, client, test_user):
 
     assert response.status_code == 200
 
-@patch("flask_jwt_extended.verify_jwt_in_request", new=lambda*args, **kwargs: None)
+@patch("flask_jwt_extended.view_decorators.verify_jwt_in_request", new=lambda*args, **kwargs: None)
 @patch("app.blueprints.file.file_routes.get_jwt_identity", return_value=1)
 def test_encrypt(mock_jwt_identity, client):
-    return
+    with open("utils/test_file.txt", "rb") as test_file:
+        file_data = {
+            "file": (test_file, "test_file.txt")
+        }
+        response = client.post("file/encrypt", data=file_data, content_type="multipart/form-data")
+
+        assert response.status_code == 200
 
 def test_unauthorized(client):
     request = client.post('/file/encrypt')
