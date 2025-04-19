@@ -158,9 +158,10 @@ def test_login_with_missing_email_or_password(client, test_user):
 
 def test_logout(client):
     response = client.post("user/logout")
+    assert response.status_code == 200
+    assert response.get_json()["message"] == "User successfully logged out"
    
     cookie = response.headers["Set-Cookie"]
-
     assert "access_token_cookie=" in cookie
     assert "Max-Age=0" in cookie
     assert "HttpOnly" in cookie
