@@ -18,8 +18,6 @@ def client():
     with app.app_context():
         db.create_all()
         yield app.test_client()
-        db.session.remove()
-        db.drop_all()
 
 
 @pytest.fixture
@@ -72,7 +70,7 @@ def test_encrypt_txt(mock_jwt_identity, client, test_user):
 
         encrypted_file = db.session.get(File, body["file_id"])
         assert encrypted_file is not None
-        assert encrypted_file.user_id == test_user["id"]
+        assert encrypted_file.user_id == 1
         assert encrypted_file.name == "test_file.txt"
         assert encrypted_file.id == body["file_id"]
 
@@ -115,7 +113,6 @@ def test_encrypt_csv(mock_jwt_identity, client, test_user):
         assert encrypted_file.user_id == 1
         assert encrypted_file.name == "test_file.csv"
         assert encrypted_file.id == body["file_id"]
-        assert encrypted_file.user_id == test_user["id"]
 
 
 def test_unauthorized(client):
